@@ -1,0 +1,2 @@
+include ':stateless.livedata'
+rootProject.name = "stateless_livedata"
