@@ -9,7 +9,7 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 
-import com.numeron.android.MainThreadExecutor;
+import com.numeron.android.AppRuntime;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -53,7 +53,7 @@ public class StatelessLiveData<T> extends LiveData<T> {
 
     @Override
     public void setValue(final T value) {
-        MainThreadExecutor.INSTANCE.assertMainThread("setValue");
+        AppRuntime.INSTANCE.getMainExecutor().assertMainThread("setValue");
         this.value = value;
         notifyObservers(value);
     }
@@ -61,19 +61,19 @@ public class StatelessLiveData<T> extends LiveData<T> {
     @Override
     public void postValue(final T value) {
         this.pendingValue = value;
-        MainThreadExecutor.INSTANCE.execute(postRunnable);
+        AppRuntime.INSTANCE.getMainExecutor().execute(postRunnable);
     }
 
     @Override
     public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<? super T> observer) {
-        MainThreadExecutor.INSTANCE.assertMainThread("observe");
+        AppRuntime.INSTANCE.getMainExecutor().assertMainThread("observe");
         LifecycleObserver lifecycleObserver = new LifecycleObserver(owner, observer);
         observers.add(lifecycleObserver);
     }
 
     @Override
     public void observeForever(@NonNull Observer<? super T> observer) {
-        MainThreadExecutor.INSTANCE.assertMainThread("observeForever");
+        AppRuntime.INSTANCE.getMainExecutor().assertMainThread("observeForever");
         ObserverWrapper observerWrapper = new ObserverWrapper(observer);
         observers.add(observerWrapper);
         observerWrapper.activeStateChanged(true);
@@ -81,7 +81,7 @@ public class StatelessLiveData<T> extends LiveData<T> {
 
     @Override
     public void removeObserver(@NonNull Observer<? super T> observer) {
-        MainThreadExecutor.INSTANCE.assertMainThread("removeObserver");
+        AppRuntime.INSTANCE.getMainExecutor().assertMainThread("removeObserver");
         ObserverWrapper target = null;
         for (ObserverWrapper wrapper : observers) {
             if (wrapper.observer == observer) {
@@ -97,14 +97,17 @@ public class StatelessLiveData<T> extends LiveData<T> {
 
     @Override
     public void removeObservers(@NonNull LifecycleOwner owner) {
-        MainThreadExecutor.INSTANCE.assertMainThread("removeObservers");
+        AppRuntime.INSTANCE.getMainExecutor().assertMainThread("removeObservers");
         ArrayList<ObserverWrapper> list = new ArrayList<>();
         for (ObserverWrapper observer : observers) {
             if (observer.isAttachedTo(owner)) {
                 list.add(observer);
             }
         }
-        observers.removeAll(list);
+        for (ObserverWrapper observerWrapper : list) {
+            observers.remove(observerWrapper);
+            observerWrapper.activeStateChanged(false);
+        }
     }
 
     @Override

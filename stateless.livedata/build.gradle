@@ -36,7 +36,7 @@ android {
 }
 
 dependencies {
-    api 'cn.numeron:android.common:1.0.1'
+    api 'cn.numeron:android.common:1.0.2'
     compileOnly 'androidx.appcompat:appcompat:1.3.0'
     compileOnly 'androidx.lifecycle:lifecycle-common:2.3.1'
 }
