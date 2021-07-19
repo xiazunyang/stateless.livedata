@@ -1,8 +1,5 @@
 package cn.numeron.stateless.livedata;
 
-import android.os.Handler;
-import android.os.Looper;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.arch.core.util.Function;
@@ -11,6 +8,8 @@ import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
+
+import com.numeron.android.MainThreadExecutor;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -54,7 +53,7 @@ public class StatelessLiveData<T> extends LiveData<T> {
 
     @Override
     public void setValue(final T value) {
-        assertMainThread("setValue");
+        MainThreadExecutor.INSTANCE.assertMainThread("setValue");
         this.value = value;
         notifyObservers(value);
     }
@@ -62,19 +61,19 @@ public class StatelessLiveData<T> extends LiveData<T> {
     @Override
     public void postValue(final T value) {
         this.pendingValue = value;
-        mainHandler.post(postRunnable);
+        MainThreadExecutor.INSTANCE.execute(postRunnable);
     }
 
     @Override
     public void observe(@NonNull LifecycleOwner owner, @NonNull Observer<? super T> observer) {
-        assertMainThread("observe");
+        MainThreadExecutor.INSTANCE.assertMainThread("observe");
         LifecycleObserver lifecycleObserver = new LifecycleObserver(owner, observer);
         observers.add(lifecycleObserver);
     }
 
     @Override
     public void observeForever(@NonNull Observer<? super T> observer) {
-        assertMainThread("observeForever");
+        MainThreadExecutor.INSTANCE.assertMainThread("observeForever");
         ObserverWrapper observerWrapper = new ObserverWrapper(observer);
         observers.add(observerWrapper);
         observerWrapper.activeStateChanged(true);
@@ -82,7 +81,7 @@ public class StatelessLiveData<T> extends LiveData<T> {
 
     @Override
     public void removeObserver(@NonNull Observer<? super T> observer) {
-        assertMainThread("removeObserver");
+        MainThreadExecutor.INSTANCE.assertMainThread("removeObserver");
         ObserverWrapper target = null;
         for (ObserverWrapper wrapper : observers) {
             if (wrapper.observer == observer) {
@@ -98,7 +97,7 @@ public class StatelessLiveData<T> extends LiveData<T> {
 
     @Override
     public void removeObservers(@NonNull LifecycleOwner owner) {
-        assertMainThread("removeObservers");
+        MainThreadExecutor.INSTANCE.assertMainThread("removeObservers");
         ArrayList<ObserverWrapper> list = new ArrayList<>();
         for (ObserverWrapper observer : observers) {
             if (observer.isAttachedTo(owner)) {
@@ -210,14 +209,5 @@ public class StatelessLiveData<T> extends LiveData<T> {
         }
 
     }
-
-    protected static void assertMainThread(String methodName) {
-        if (Looper.myLooper() != mainHandler.getLooper()) {
-            throw new IllegalStateException("Cannot invoke " + methodName + " on a background"
-                    + " thread");
-        }
-    }
-
-    protected final static Handler mainHandler = new Handler(Looper.getMainLooper());
 
 }
