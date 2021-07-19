@@ -23,6 +23,13 @@ allprojects {
         maven { url 'https://maven.aliyun.com/repository/central' }
         maven { url 'https://maven.aliyun.com/repository/jcenter' }
     }
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (requested.group == "androidx.lifecycle") {
+                details.useVersion '2.3.1'
+            }
+        }
+    }
 }
 
 task clean(type: Delete) {
