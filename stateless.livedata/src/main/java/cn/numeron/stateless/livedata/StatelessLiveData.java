@@ -9,7 +9,7 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
 
-import com.numeron.android.AppRuntime;
+import cn.numeron.android.AppRuntime;
 
 import org.jetbrains.annotations.NotNull;
 
